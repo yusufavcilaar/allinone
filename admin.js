@@ -2,7 +2,7 @@
 
 const CONFIG = {
   owner: 'yusufavcilaar',      // <- değiştir
-  repo: 'my-links',                // <- değiştir
+  repo: 'allinone',                // <- değiştir
   branch: 'main',
   dataPath: 'sites.json',
   idleTimeoutMs: 15 * 60 * 1000,
