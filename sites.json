@@ -1,5 +1,14 @@
 {
   "version": 1,
-  "updated": "2024-01-01T00:00:00.000Z",
-  "sites": []
+  "updated": "2026-10-31T07:12:07.368Z",
+  "sites": [
+    {
+      "id": "e1922857-6bc2-406e-a70c-913913dd1cde",
+      "title": "Sigarasız Hayat",
+      "url": "https://yusufavcilaar.github.io/sigarasiz-hayat/",
+      "category": "İşinize Yarayacaklar",
+      "description": "İşinize yarayabilecek, oluşturduğum bütün siteleri buradan ulaşabilirsiniz.",
+      "createdAt": "2026-10-31T07:12:07.368Z"
+    }
+  ]
 }
