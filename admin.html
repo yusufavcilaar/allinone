@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               script-src 'self';
+               style-src 'self' 'unsafe-inline';
+               img-src 'self' https: data:;
+               connect-src 'self' https://api.github.com;
+               base-uri 'self';
+               form-action 'self';">
+<title>Admin – Site Koleksiyonum</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header>
+  <h1>🔒 Yönetim Paneli</h1>
+  <button id="logoutBtn" class="danger" type="button" style="display:none;">Çıkış</button>
+</header>
+<main>
+
+  <!-- Giriş -->
+  <section id="loginSection" class="login-box">
+    <h2>GitHub ile Giriş</h2>
+    <p class="muted">
+      Fine-grained PAT girin. Token <strong>sadece bu sekmede</strong> tutulur,
+      sekme kapanınca silinir. PAT'ınızı asla paylaşmayın.
+    </p>
+    <input type="password" id="patInput" placeholder="github_pat_..." autocomplete="off">
+    <button id="loginBtn" type="button">Giriş Yap</button>
+    <p id="loginError" class="error"></p>
+  </section>
+
+  <!-- Panel -->
+  <section id="panelSection" style="display:none;">
+    <form id="siteForm">
+      <input type="hidden" id="siteId">
+      <input type="text" id="title" placeholder="Başlık" required maxlength="120">
+      <input type="url" id="url" placeholder="https://..." required>
+      <input type="text" id="category" placeholder="Kategori (örn. Blog)" maxlength="60">
+      <textarea id="description" placeholder="Açıklama (opsiyonel)" maxlength="300"></textarea>
+      <div class="actions">
+        <button type="submit" id="submitBtn">Ekle</button>
+        <button type="button" id="cancelEdit" class="secondary" style="display:none;">İptal</button>
+      </div>
+    </form>
+
+    <p id="panelStatus" class="status"></p>
+    <section id="siteList" class="grid"></section>
+  </section>
+
+</main>
+<script src="assets/admin.js"></script>
+</body>
+</html>
