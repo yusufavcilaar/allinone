@@ -1,0 +1,78 @@
+:root{
+  --bg:#f5f7fb; --card:#fff; --text:#1a1a2e; --muted:#6b7280;
+  --primary:#4f46e5; --border:#e5e7eb; --danger:#ef4444; --success:#10b981;
+}
+body.dark{
+  --bg:#0f172a; --card:#1e293b; --text:#f1f5f9; --muted:#94a3b8;
+  --primary:#818cf8; --border:#334155; --danger:#f87171; --success:#34d399;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh;
+  transition:background .2s,color .2s;
+}
+header{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:1rem 2rem; background:var(--card);
+  border-bottom:1px solid var(--border); position:sticky; top:0; z-index:10;
+}
+header h1{margin:0; font-size:1.3rem}
+main{max-width:1200px; margin:0 auto; padding:1.5rem}
+button{
+  cursor:pointer; border:none; background:var(--primary); color:#fff;
+  padding:.6rem 1rem; border-radius:8px; font-weight:600; font-size:.95rem;
+}
+button.secondary{background:var(--muted)}
+button.danger{background:var(--danger)}
+button:disabled{opacity:.5; cursor:not-allowed}
+input,textarea,select{
+  padding:.6rem .8rem; border-radius:8px; border:1px solid var(--border);
+  background:var(--bg); color:var(--text); font-size:.95rem;
+  font-family:inherit; width:100%;
+}
+form{
+  display:grid; grid-template-columns:1fr 1fr; gap:.6rem;
+  background:var(--card); padding:1rem; border-radius:12px;
+  border:1px solid var(--border); margin-bottom:1.2rem;
+}
+form textarea{grid-column:1/-1; min-height:60px; resize:vertical}
+form .actions{grid-column:1/-1; display:flex; gap:.5rem}
+.controls{display:flex; gap:.6rem; margin-bottom:1rem; flex-wrap:wrap}
+.controls input,.controls select{flex:1; min-width:180px}
+.grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem;
+}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:12px;
+  padding:1rem; display:flex; flex-direction:column; gap:.4rem;
+}
+.card-header{display:flex; align-items:center; gap:.5rem}
+.favicon{width:24px; height:24px; border-radius:4px; flex-shrink:0}
+.card h3{margin:0; font-size:1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.card a{color:var(--text); text-decoration:none}
+.card a:hover{color:var(--primary)}
+.url{font-size:.78rem; color:var(--muted); word-break:break-all; margin:0}
+.badge{
+  align-self:flex-start; background:var(--primary); color:#fff;
+  font-size:.72rem; padding:.15rem .55rem; border-radius:999px;
+}
+.desc{font-size:.85rem; color:var(--muted); margin:.2rem 0}
+.card .actions{margin-top:auto; display:flex; gap:.4rem}
+.card .actions button{padding:.35rem .7rem; font-size:.8rem}
+.empty,.status{color:var(--muted); text-align:center; padding:.5rem}
+.status.success{color:var(--success)}
+.status.error,.error{color:var(--danger)}
+.error{margin:.3rem 0 0; font-size:.85rem}
+.muted{color:var(--muted)}
+.login-box{
+  max-width:480px; margin:2rem auto; background:var(--card); padding:1.5rem;
+  border-radius:12px; border:1px solid var(--border); display:flex;
+  flex-direction:column; gap:.8rem;
+}
+.login-box h2{margin:0}
+@media(max-width:600px){
+  form{grid-template-columns:1fr}
+  header{padding:.8rem 1rem}
+  main{padding:1rem}
+}
