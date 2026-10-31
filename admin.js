@@ -1,7 +1,7 @@
 /* ============ Admin Paneli – Güvenli Mod ============ */
 
 const CONFIG = {
-  owner: 'KULLANICI_ADINIZ',      // <- değiştir
+  owner: 'yusufavcilaar',      // <- değiştir
   repo: 'my-links',                // <- değiştir
   branch: 'main',
   dataPath: 'sites.json',
