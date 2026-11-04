@@ -4,69 +4,94 @@
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<meta name="theme-color" content="#4f46e5">
-<meta http-equiv="Content-Security-Policy"
-      content="default-src 'self';
-               script-src 'self';
-               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-               font-src 'self' https://fonts.gstatic.com data:;
-               img-src 'self' https: data:;
-               connect-src 'self';
-               base-uri 'self';
-               form-action 'self';">
-<title>Site Koleksiyonum — Keşfet</title>
-<link rel="stylesheet" href="style.css?v=6">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.github.com;">
+<title>Admin – Site Koleksiyonum</title>
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 <header>
-  <h1>🌐 Site Koleksiyonum</h1>
+  <h1>🔒 Yönetim Paneli</h1>
   <div class="header-actions">
-    <button id="themeToggle" class="secondary" type="button" aria-label="Tema değiştir">🌙</button>
+    <button id="themeToggle" class="secondary" type="button">🌙</button>
+    <a href="index.html" class="secondary" style="display:inline-flex;align-items:center;padding:0.7rem 1.2rem;border-radius:12px;text-decoration:none;color:inherit;font-weight:600;">← Site</a>
+    <button id="logoutBtn" class="danger" type="button" style="display:none;">Çıkış</button>
   </div>
 </header>
 
 <main>
-  <section class="hero">
-    <h2>İşine Yarayacak Siteler</h2>
-    <p>El ile seçilmiş, kategorilere ayrılmış faydalı web siteleri koleksiyonu.</p>
-    <div class="hero-stats">
-      <div class="stat"><strong id="statTotal">—</strong><span>Siteler</span></div>
-      <div class="stat"><strong id="statCategories">—</strong><span>Kategori</span></div>
-    </div>
+  <section id="loginSection" class="login-box">
+    <div class="login-icon">🔐</div>
+    <h2>Yönetici Girişi</h2>
+    <p style="margin-bottom:1rem;color:var(--text-muted);">Fine-grained PAT girin. Token sadece bu sekmede tutulur.</p>
+    <input type="password" id="patInput" placeholder="github_pat_..." style="text-align:center;margin-bottom:1rem;">
+    <button id="loginBtn" type="button" style="width:100%;">Giriş Yap</button>
+    <p id="loginError" class="status error"></p>
   </section>
 
-  <div class="toolbar">
-    <div class="search-wrapper">
-      <input type="search" id="search" placeholder="Başlık, URL, kategori veya açıklama ara..." aria-label="Ara">
-      <kbd>Ctrl K</kbd>
+  <section id="panelSection" style="display:none;">
+    <div class="admin-hero">
+      <h2>İçerik Yönetimi</h2>
+      <p>Siteleri ekleyin, düzenleyin veya silin.</p>
     </div>
-    <select id="sortBy" aria-label="Sıralama">
-      <option value="date-desc">↓ En Yeni</option>
-      <option value="date-asc">↑ En Eski</option>
-      <option value="title-asc">A → Z</option>
-      <option value="title-desc">Z → A</option>
-    </select>
-  </div>
 
-  <div class="chips" id="categoryChips"></div>
+    <div class="admin-stats">
+      <div class="admin-stat">
+        <div class="admin-stat-icon">📚</div>
+        <div><strong id="statTotal">0</strong><span>Toplam Site</span></div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-icon">🏷️</div>
+        <div><strong id="statCategories">0</strong><span>Kategori</span></div>
+      </div>
+    </div>
 
-  <div class="result-info">
-    <span><strong id="resultCount">0</strong> site listeleniyor</span>
-    <button id="clearFilters" class="secondary" type="button" hidden>Filtreleri temizle</button>
-  </div>
+    <form id="siteForm">
+      <div class="form-header">
+        <h3 id="formTitle">➕ Yeni Site Ekle</h3>
+        <p id="formSubtitle">Tüm alanları doldurun, sonra kaydedin.</p>
+      </div>
+      <input type="hidden" id="siteId">
+      <input type="text" id="title" placeholder="Başlık (örn. Google)" required maxlength="120">
+      <input type="url" id="url" placeholder="https://example.com" required>
+      <input type="text" id="category" placeholder="Kategori (örn. Blog)" maxlength="60">
+      <textarea id="description" placeholder="Açıklama (opsiyonel)" maxlength="300"></textarea>
+      <div class="char-counter" id="descCounter">0 / 300</div>
+      <div class="actions">
+        <button type="submit" id="submitBtn">Kaydet</button>
+        <button type="button" id="cancelEdit" class="secondary" style="display:none;">İptal</button>
+      </div>
+    </form>
 
-  <p id="status" class="status"></p>
-  <section id="siteList" class="grid" aria-live="polite"></section>
+    <div class="admin-list-header">
+      <h3>📋 Kayıtlı Siteler</h3>
+      <div class="admin-controls">
+        <input type="search" id="adminSearch" placeholder="🔍 Ara...">
+        <select id="adminSort">
+          <option value="date-desc">↓ En Yeni</option>
+          <option value="date-asc">↑ En Eski</option>
+          <option value="title-asc">A → Z</option>
+        </select>
+      </div>
+    </div>
+    
+    <p id="panelStatus" class="status"></p>
+    <section id="siteList" class="grid"></section>
+  </section>
 </main>
 
-<footer>
-  <p>© <span id="year"></span> Site Koleksiyonum · <a href="admin.html">Yönetim</a></p>
-</footer>
+<div class="modal-overlay" id="confirmModal" hidden>
+  <div class="modal" style="text-align:center;">
+    <h3 id="confirmTitle" style="margin-bottom:1rem;">Onayla</h3>
+    <p id="confirmMessage" style="margin-bottom:1.5rem;color:var(--text-muted);"></p>
+    <div style="display:flex;gap:1rem;justify-content:center;">
+      <button class="secondary" id="confirmCancel" type="button">İptal</button>
+      <button class="danger" id="confirmOk" type="button">Sil</button>
+    </div>
+  </div>
+</div>
 
-<button id="backToTop" class="back-to-top" type="button" aria-label="Yukarı çık">↑</button>
-<div class="toast-container" id="toastContainer" aria-live="polite"></div>
-
-<script src="public.js?v=6"></script>
+<div class="toast-container" id="toastContainer"></div>
+<script src="admin.js?v=10"></script>
 </body>
 </html>
