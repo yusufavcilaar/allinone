@@ -4,46 +4,29 @@
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<meta name="theme-color" content="#4f46e5">
-<!-- CSP GÜNCELLENDİ: Fontlar için izin eklendi -->
-<meta http-equiv="Content-Security-Policy"
-      content="default-src 'self';
-               script-src 'self';
-               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-               font-src 'self' https://fonts.gstatic.com data:;
-               img-src 'self' https: data:;
-               connect-src 'self';
-               base-uri 'self';
-               form-action 'self';">
-<title>Site Koleksiyonum — Keşfet</title>
-<!-- CACHE BUSTING: ?v=2 eklendi -->
-<link rel="stylesheet" href="style.css">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self';">
+<title>Site Koleksiyonum</title>
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 <header>
   <h1>🌐 Site Koleksiyonum</h1>
   <div class="header-actions">
-    <button id="themeToggle" class="secondary" type="button" aria-label="Tema değiştir">🌙</button>
+    <button id="themeToggle" class="secondary" type="button">🌙</button>
   </div>
 </header>
 
 <main>
-  <section class="hero">
+  <section class="admin-hero">
     <h2>İşine Yarayacak Siteler</h2>
     <p>El ile seçilmiş, kategorilere ayrılmış faydalı web siteleri koleksiyonu.</p>
-    <div class="hero-stats">
-      <div class="stat"><strong id="statTotal">—</strong><span>Siteler</span></div>
-      <div class="stat"><strong id="statCategories">—</strong><span>Kategori</span></div>
-    </div>
   </section>
 
   <div class="toolbar">
     <div class="search-wrapper">
-      <input type="search" id="search" placeholder="Başlık, URL, kategori veya açıklama ara..." aria-label="Ara">
-      <kbd>Ctrl K</kbd>
+      <input type="search" id="search" placeholder="Başlık, URL, kategori veya açıklama ara...">
     </div>
-    <select id="sortBy" aria-label="Sıralama">
+    <select id="sortBy">
       <option value="date-desc">↓ En Yeni</option>
       <option value="date-asc">↑ En Eski</option>
       <option value="title-asc">A → Z</option>
@@ -51,25 +34,16 @@
     </select>
   </div>
 
-  <div class="chips" id="categoryChips"></div>
+  <div class="chips" id="categoryChips" style="display:flex;gap:0.5rem;margin-bottom:1.5rem;overflow-x:auto;padding-bottom:0.5rem;"></div>
 
-  <div class="result-info">
+  <div class="result-info" style="display:flex;justify-content:space-between;margin-bottom:1.5rem;font-size:0.9rem;color:var(--text-muted);">
     <span><strong id="resultCount">0</strong> site listeleniyor</span>
-    <button id="clearFilters" class="secondary" type="button" hidden>Filtreleri temizle</button>
   </div>
 
-  <p id="status" class="status"></p>
-  <section id="siteList" class="grid" aria-live="polite"></section>
+  <section id="siteList" class="grid"></section>
 </main>
 
-<footer>
-  <p>© <span id="year"></span> Site Koleksiyonum · <a href="admin.html">Yönetim</a></p>
-</footer>
-
-<button id="backToTop" class="back-to-top" type="button" aria-label="Yukarı çık">↑</button>
-<div class="toast-container" id="toastContainer" aria-live="polite"></div>
-
-<!-- CACHE BUSTING: ?v=2 eklendi -->
-<script src="public.js?v=2"></script>
+<div class="toast-container" id="toastContainer"></div>
+<script src="public.js?v=10"></script>
 </body>
 </html>
