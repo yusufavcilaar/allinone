@@ -1,34 +1,132 @@
-/* ============ Admin Paneli – Güvenli Mod ============ */
+/* ============ Admin Paneli – Güvenli Mod v2 ============ */
 
 const CONFIG = {
-  owner: 'yusufavcilaar',      // <- değiştir
-  repo: 'allinone',                // <- değiştir
+  owner: 'yusufavcilaar',
+  repo: 'allinone',
   branch: 'main',
   dataPath: 'sites.json',
   idleTimeoutMs: 15 * 60 * 1000,
 };
 
 const TOKEN_KEY = 'gh_pat_session';
+const THEME_KEY = 'theme';
+
 let currentSha = null;
 let allSites = [];
+let filteredSites = [];
 let idleTimer = null;
+let adminState = { q: '', sort: 'date-desc' };
+
+/* ---------- Yardımcılar ---------- */
+const $ = (id) => document.getElementById(id);
+const debounce = (fn, ms = 150) => {
+  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+};
+const getDomain = (u) => { try { return new URL(u).hostname; } catch { return ''; } };
+const safeText = (s) => (s == null ? '' : String(s));
+
+function isValidHttpUrl(u) {
+  try {
+    const p = new URL(u);
+    return (p.protocol === 'https:' || p.protocol === 'http:')
+      && p.hostname.includes('.')
+      && !p.username
+      && !p.password;
+  } catch { return false; }
+}
+
+/* ---------- Toast ---------- */
+function showToast(msg, type = '') {
+  const c = $('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('leaving');
+    setTimeout(() => el.remove(), 350);
+  }, 3200);
+}
+
+/* ---------- Confirm Modal (Promise) ---------- */
+function confirmModal({ title = 'Onayla', message = '', okLabel = 'Tamam', danger = false } = {}) {
+  return new Promise((resolve) => {
+    const overlay = $('confirmModal');
+    $('confirmTitle').textContent = title;
+    $('confirmMessage').textContent = message;
+    const okBtn = $('confirmOk');
+    okBtn.textContent = okLabel;
+    okBtn.className = danger ? 'danger' : '';
+    overlay.hidden = false;
+
+    const cleanup = (val) => {
+      overlay.hidden = true;
+      okBtn.removeEventListener('click', onOk);
+      $('confirmCancel').removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onOverlay);
+      document.removeEventListener('keydown', onKey);
+      resolve(val);
+    };
+    const onOk = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    const onOverlay = (e) => { if (e.target === overlay) cleanup(false); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') cleanup(false);
+      if (e.key === 'Enter') cleanup(true);
+    };
+
+    okBtn.addEventListener('click', onOk);
+    $('confirmCancel').addEventListener('click', onCancel);
+    overlay.addEventListener('click', onOverlay);
+    document.addEventListener('keydown', onKey);
+    okBtn.focus();
+  });
+}
+
+/* ---------- Tema ---------- */
+function isDarkMode() {
+  if (document.body.classList.contains('dark')) return true;
+  if (document.body.classList.contains('light')) return false;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function updateThemeIcon() {
+  const btn = $('themeToggle');
+  if (btn) btn.textContent = isDarkMode() ? '☀️' : '🌙';
+}
+function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === 'dark' || saved === 'light') document.body.classList.add(saved);
+  updateThemeIcon();
+  $('themeToggle').addEventListener('click', () => {
+    const nowDark = isDarkMode();
+    document.body.classList.remove('dark', 'light');
+    if (nowDark) {
+      document.body.classList.add('light');
+      localStorage.setItem(THEME_KEY, 'light');
+    } else {
+      document.body.classList.add('dark');
+      localStorage.setItem(THEME_KEY, 'dark');
+    }
+    updateThemeIcon();
+  });
+}
 
 /* ---------- Token ---------- */
 function getToken() { return sessionStorage.getItem(TOKEN_KEY); }
 function setToken(t) { sessionStorage.setItem(TOKEN_KEY, t); resetIdle(); }
 function clearToken() { sessionStorage.removeItem(TOKEN_KEY); }
 
-/* ---------- Inactivity logout ---------- */
+/* ---------- Idle logout ---------- */
 function resetIdle() {
   clearTimeout(idleTimer);
   if (!getToken()) return;
   idleTimer = setTimeout(() => {
     clearToken();
-    alert('Güvenlik için oturum kapatıldı.');
-    location.reload();
+    showToast('Güvenlik için oturum kapatıldı.', 'error');
+    setTimeout(() => location.reload(), 800);
   }, CONFIG.idleTimeoutMs);
 }
-['mousemove','keydown','click','touchstart'].forEach(ev =>
+['mousemove', 'keydown', 'click', 'touchstart'].forEach(ev =>
   document.addEventListener(ev, resetIdle, { passive: true })
 );
 
@@ -85,41 +183,73 @@ async function ghSaveFile(payload, message) {
   currentSha = result.content.sha;
 }
 
-/* ---------- Doğrulamalar ---------- */
-function isValidHttpUrl(u) {
-  try {
-    const p = new URL(u);
-    return (p.protocol === 'https:' || p.protocol === 'http:') && !p.username && !p.password;
-  } catch { return false; }
-}
-
 /* ---------- Görünüm ---------- */
 function showPanel() {
-  document.getElementById('loginSection').style.display = 'none';
-  document.getElementById('panelSection').style.display = 'block';
-  document.getElementById('logoutBtn').style.display = 'inline-block';
+  $('loginSection').style.display = 'none';
+  $('panelSection').style.display = 'block';
+  $('logoutBtn').style.display = 'inline-flex';
 }
 function showLogin() {
-  document.getElementById('loginSection').style.display = 'block';
-  document.getElementById('panelSection').style.display = 'none';
-  document.getElementById('logoutBtn').style.display = 'none';
+  $('loginSection').style.display = 'block';
+  $('panelSection').style.display = 'none';
+  $('logoutBtn').style.display = 'none';
 }
 
-function getDomain(u) { try { return new URL(u).hostname; } catch { return ''; } }
+function setStatus(msg, kind = '') {
+  const el = $('panelStatus');
+  el.className = 'status ' + kind;
+  el.textContent = msg || '';
+}
 
-function renderSites() {
-  const container = document.getElementById('siteList');
+/* ---------- İstatistikler ---------- */
+function updateStats() {
+  $('statTotal').textContent = allSites.length;
+  const cats = new Set(allSites.map(s => s.category).filter(Boolean));
+  $('statCategories').textContent = cats.size;
+  $('statVisible').textContent = filteredSites.length;
+}
+
+/* ---------- Render ---------- */
+function applyAdminFilters() {
+  const q = adminState.q.toLowerCase().trim();
+  let list = allSites.slice();
+  if (q) {
+    list = list.filter(s =>
+      safeText(s.title).toLowerCase().includes(q) ||
+      safeText(s.url).toLowerCase().includes(q) ||
+      safeText(s.category).toLowerCase().includes(q) ||
+      safeText(s.description).toLowerCase().includes(q)
+    );
+  }
+  switch (adminState.sort) {
+    case 'title-asc': list.sort((a, b) => safeText(a.title).localeCompare(safeText(b.title), 'tr')); break;
+    case 'title-desc': list.sort((a, b) => safeText(b.title).localeCompare(safeText(a.title), 'tr')); break;
+    case 'date-asc': list.sort((a, b) => safeText(a.createdAt).localeCompare(safeText(b.createdAt))); break;
+    default: list.sort((a, b) => safeText(b.createdAt).localeCompare(safeText(a.createdAt)));
+  }
+  filteredSites = list;
+  renderSites(list);
+  updateStats();
+}
+
+function renderSites(sites) {
+  const container = $('siteList');
   container.innerHTML = '';
-  if (!allSites.length) {
-    const p = document.createElement('p');
-    p.className = 'empty';
-    p.textContent = 'Henüz site yok.';
-    container.appendChild(p);
+
+  if (!sites.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = allSites.length
+      ? `<span class="empty-icon">🔍</span><h3>Sonuç yok</h3><p>Aramanızla eşleşen site bulunamadı.</p>`
+      : `<span class="empty-icon">📝</span><h3>Henüz site yok</h3><p>Yukarıdaki formdan ilk sitenizi ekleyin.</p>`;
+    container.appendChild(empty);
     return;
   }
-  for (const s of allSites) {
+
+  sites.forEach((s, i) => {
     const card = document.createElement('div');
     card.className = 'card';
+    card.style.setProperty('--i', i);
 
     const header = document.createElement('div');
     header.className = 'card-header';
@@ -137,7 +267,9 @@ function renderSites() {
 
     const h3 = document.createElement('h3');
     const a = document.createElement('a');
-    a.href = s.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.href = s.url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
     a.textContent = s.title || '';
     h3.appendChild(a);
     header.appendChild(h3);
@@ -166,58 +298,70 @@ function renderSites() {
 
     const editBtn = document.createElement('button');
     editBtn.className = 'secondary';
-    editBtn.textContent = 'Düzenle';
+    editBtn.textContent = '✏️ Düzenle';
     editBtn.addEventListener('click', () => startEdit(s.id));
 
     const delBtn = document.createElement('button');
     delBtn.className = 'danger';
-    delBtn.textContent = 'Sil';
+    delBtn.textContent = '🗑️ Sil';
     delBtn.addEventListener('click', () => removeSite(s.id));
 
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
     card.appendChild(actions);
     container.appendChild(card);
-  }
+  });
 }
 
-function setStatus(msg, kind = '') {
-  const el = document.getElementById('panelStatus');
-  el.className = 'status ' + kind;
-  el.textContent = msg || '';
-}
-
-/* ---------- CRUD ---------- */
+/* ---------- Form ---------- */
 function resetForm() {
-  document.getElementById('siteForm').reset();
-  document.getElementById('siteId').value = '';
-  document.getElementById('submitBtn').textContent = 'Ekle';
-  document.getElementById('cancelEdit').style.display = 'none';
+  $('siteForm').reset();
+  $('siteId').value = '';
+  $('submitBtn').textContent = 'Ekle';
+  $('cancelEdit').style.display = 'none';
+  updateDescCounter();
+}
+
+function updateDescCounter() {
+  const len = $('description').value.length;
+  const el = $('descCounter');
+  el.textContent = `${len} / 300`;
+  el.classList.toggle('over', len > 300);
 }
 
 async function handleSubmit(e) {
   e.preventDefault();
-  const id = document.getElementById('siteId').value;
-  const title = document.getElementById('title').value.trim();
-  const url = document.getElementById('url').value.trim();
-  const category = document.getElementById('category').value.trim() || 'Genel';
-  const description = document.getElementById('description').value.trim();
+  const id = $('siteId').value;
+  const title = $('title').value.trim();
+  const url = $('url').value.trim();
+  const category = $('category').value.trim() || 'Genel';
+  const description = $('description').value.trim();
 
-  if (!isValidHttpUrl(url)) {
-    setStatus('Geçerli bir http/https URL girin.', 'error');
-    return;
-  }
+  if (!title) return setStatus('Başlık gerekli.', 'error');
+  if (!isValidHttpUrl(url)) return setStatus('Geçerli bir http/https URL girin.', 'error');
+  if (description.length > 300) return setStatus('Açıklama 300 karakteri geçemez.', 'error');
 
   try {
     setStatus('Kaydediliyor...');
+    $('submitBtn').disabled = true;
+
     const data = await ghGetFile();
     const list = Array.isArray(data.sites) ? data.sites : [];
+
+    // Duplicate URL kontrolü (kendi id'si hariç)
+    const dup = list.find(s => s.url === url && s.id !== id);
+    if (dup) {
+      $('submitBtn').disabled = false;
+      return setStatus(`Bu URL zaten kayıtlı: "${dup.title}"`, 'error');
+    }
 
     if (id) {
       const idx = list.findIndex(s => s.id === id);
       if (idx === -1) throw new Error('Kayıt bulunamadı');
-      list[idx] = { ...list[idx], title, url, category, description,
-                    updatedAt: new Date().toISOString() };
+      list[idx] = {
+        ...list[idx], title, url, category, description,
+        updatedAt: new Date().toISOString(),
+      };
     } else {
       list.push({
         id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
@@ -232,31 +376,45 @@ async function handleSubmit(e) {
     );
 
     allSites = list;
-    renderSites();
+    applyAdminFilters();
     resetForm();
     setStatus('Kaydedildi ✓', 'success');
+    showToast(id ? 'Site güncellendi' : 'Yeni site eklendi', 'success');
   } catch (err) {
     setStatus(err.message, 'error');
+    showToast(err.message, 'error');
+  } finally {
+    $('submitBtn').disabled = false;
   }
 }
 
-async function startEdit(id) {
+function startEdit(id) {
   const s = allSites.find(x => x.id === id);
   if (!s) return;
-  document.getElementById('siteId').value = s.id;
-  document.getElementById('title').value = s.title || '';
-  document.getElementById('url').value = s.url || '';
-  document.getElementById('category').value = s.category === 'Genel' ? '' : (s.category || '');
-  document.getElementById('description').value = s.description || '';
-  document.getElementById('submitBtn').textContent = 'Güncelle';
-  document.getElementById('cancelEdit').style.display = 'inline-block';
+  $('siteId').value = s.id;
+  $('title').value = s.title || '';
+  $('url').value = s.url || '';
+  $('category').value = s.category === 'Genel' ? '' : (s.category || '');
+  $('description').value = s.description || '';
+  $('submitBtn').textContent = 'Güncelle';
+  $('cancelEdit').style.display = 'inline-block';
+  updateDescCounter();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  $('title').focus();
 }
 
 async function removeSite(id) {
   const s = allSites.find(x => x.id === id);
   if (!s) return;
-  if (!confirm(`"${s.title}" silinsin mi?`)) return;
+
+  const ok = await confirmModal({
+    title: 'Siteyi sil?',
+    message: `"${s.title}" kalıcı olarak silinecek. Bu işlem geri alınamaz.`,
+    okLabel: 'Sil',
+    danger: true,
+  });
+  if (!ok) return;
+
   try {
     setStatus('Siliniyor...');
     const data = await ghGetFile();
@@ -266,32 +424,44 @@ async function removeSite(id) {
       `Site silindi: ${s.title}`
     );
     allSites = list;
-    renderSites();
+    applyAdminFilters();
     setStatus('Silindi ✓', 'success');
+    showToast('Site silindi', 'success');
   } catch (err) {
     setStatus(err.message, 'error');
+    showToast(err.message, 'error');
   }
 }
 
 /* ---------- Giriş / Çıkış ---------- */
 async function login() {
-  const token = document.getElementById('patInput').value.trim();
-  const errEl = document.getElementById('loginError');
+  const token = $('patInput').value.trim();
+  const errEl = $('loginError');
   errEl.textContent = '';
+
   if (!token) { errEl.textContent = 'Token gerekli.'; return; }
-  document.getElementById('loginBtn').disabled = true;
+  if (!token.startsWith('github_pat_') && !token.startsWith('ghp_')) {
+    errEl.textContent = 'Token formatı geçersiz görünüyor.';
+    return;
+  }
+
+  $('loginBtn').disabled = true;
+  $('loginBtn').textContent = 'Giriş yapılıyor...';
+
   try {
     setToken(token);
-    const data = await ghGetFile();       // doğrulama testi
+    const data = await ghGetFile();
     allSites = Array.isArray(data.sites) ? data.sites : [];
-    renderSites();
+    applyAdminFilters();
     showPanel();
     setStatus(`${allSites.length} site yüklendi.`, 'success');
+    showToast('Giriş başarılı', 'success');
   } catch (err) {
     clearToken();
     errEl.textContent = err.message;
   } finally {
-    document.getElementById('loginBtn').disabled = false;
+    $('loginBtn').disabled = false;
+    $('loginBtn').textContent = 'Giriş Yap';
   }
 }
 
@@ -302,22 +472,42 @@ function logout() {
 
 /* ---------- Başlat ---------- */
 async function init() {
-  if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+  initTheme();
 
-  document.getElementById('loginBtn').addEventListener('click', login);
-  document.getElementById('patInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') login();
+  $('loginBtn').addEventListener('click', login);
+  $('patInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+  $('logoutBtn').addEventListener('click', logout);
+  $('siteForm').addEventListener('submit', handleSubmit);
+  $('cancelEdit').addEventListener('click', resetForm);
+  $('description').addEventListener('input', updateDescCounter);
+
+  $('adminSearch').addEventListener('input', debounce((e) => {
+    adminState.q = e.target.value;
+    applyAdminFilters();
+  }, 120));
+
+  $('adminSort').addEventListener('change', (e) => {
+    adminState.sort = e.target.value;
+    applyAdminFilters();
   });
-  document.getElementById('logoutBtn').addEventListener('click', logout);
-  document.getElementById('siteForm').addEventListener('submit', handleSubmit);
-  document.getElementById('cancelEdit').addEventListener('click', resetForm);
 
-  // Token varsa otomatik giriş dene
+  // Ctrl+K → arama
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      const s = $('adminSearch');
+      if (s && !$('panelSection').style.display.includes('none')) { s.focus(); s.select(); }
+    }
+  });
+
+  updateDescCounter();
+
+  // Otomatik giriş
   if (getToken()) {
     try {
       const data = await ghGetFile();
       allSites = Array.isArray(data.sites) ? data.sites : [];
-      renderSites();
+      applyAdminFilters();
       showPanel();
     } catch {
       clearToken();
