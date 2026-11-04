@@ -6,16 +6,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#4f46e5">
+<!-- CSP GÜNCELLENDİ: Fontlar için izin eklendi -->
 <meta http-equiv="Content-Security-Policy"
       content="default-src 'self';
                script-src 'self';
-               style-src 'self' 'unsafe-inline';
+               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+               font-src 'self' https://fonts.gstatic.com data:;
                img-src 'self' https: data:;
                connect-src 'self';
                base-uri 'self';
                form-action 'self';">
 <title>Site Koleksiyonum — Keşfet</title>
-<link rel="stylesheet" href="style.css">
+<!-- CACHE BUSTING: ?v=2 eklendi -->
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 <header>
@@ -66,6 +69,7 @@
 <button id="backToTop" class="back-to-top" type="button" aria-label="Yukarı çık">↑</button>
 <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
-<script src="public.js"></script>
+<!-- CACHE BUSTING: ?v=2 eklendi -->
+<script src="public.js?v=2"></script>
 </body>
 </html>
