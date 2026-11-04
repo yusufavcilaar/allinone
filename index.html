@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#4f46e5">
 <meta http-equiv="Content-Security-Policy"
       content="default-src 'self';
                script-src 'self';
@@ -13,23 +14,58 @@
                connect-src 'self';
                base-uri 'self';
                form-action 'self';">
-<title>Site Koleksiyonum</title>
+<title>Site Koleksiyonum — Keşfet</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
   <h1>🌐 Site Koleksiyonum</h1>
-  <button id="themeToggle" class="secondary" type="button">🌙 Tema</button>
+  <div class="header-actions">
+    <button id="themeToggle" class="secondary" type="button" aria-label="Tema değiştir">🌙</button>
+  </div>
 </header>
+
 <main>
-  <div class="controls">
-    <input type="search" id="search" placeholder="Ara (başlık, url, kategori, açıklama)...">
-    <select id="categoryFilter"><option value="">Tüm Kategoriler</option></select>
+  <section class="hero">
+    <h2>İşine Yarayacak Siteler</h2>
+    <p>El ile seçilmiş, kategorilere ayrılmış faydalı web siteleri koleksiyonu.</p>
+    <div class="hero-stats">
+      <div class="stat"><strong id="statTotal">—</strong><span>Siteler</span></div>
+      <div class="stat"><strong id="statCategories">—</strong><span>Kategori</span></div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="search-wrapper">
+      <input type="search" id="search" placeholder="Başlık, URL, kategori veya açıklama ara..." aria-label="Ara">
+      <kbd>Ctrl K</kbd>
+    </div>
+    <select id="sortBy" aria-label="Sıralama">
+      <option value="date-desc">↓ En Yeni</option>
+      <option value="date-asc">↑ En Eski</option>
+      <option value="title-asc">A → Z</option>
+      <option value="title-desc">Z → A</option>
+    </select>
+  </div>
+
+  <div class="chips" id="categoryChips"></div>
+
+  <div class="result-info">
+    <span><strong id="resultCount">0</strong> site listeleniyor</span>
+    <button id="clearFilters" class="secondary" type="button" hidden>Filtreleri temizle</button>
   </div>
 
   <p id="status" class="status"></p>
-  <section id="siteList" class="grid"></section>
+  <section id="siteList" class="grid" aria-live="polite"></section>
 </main>
+
+<footer>
+  <p>© <span id="year"></span> Site Koleksiyonum · <a href="admin.html">Yönetim</a></p>
+</footer>
+
+<button id="backToTop" class="back-to-top" type="button" aria-label="Yukarı çık">↑</button>
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
 <script src="public.js"></script>
 </body>
 </html>
