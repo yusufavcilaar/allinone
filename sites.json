@@ -1,14 +1,22 @@
 {
   "version": 1,
-  "updated": "2026-11-04T04:02:36.873Z",
+  "updated": "2026-11-06T12:00:00.000Z",
   "sites": [
     {
-      "id": "123",
+      "id": "e1922857-6bc2-406e-a70c-913913dd1cde",
       "title": "Sigarasız Hayat",
       "url": "https://yusufavcilaar.github.io/sigarasiz-hayat/",
       "category": "İşinize Yarayacaklar",
-      "description": "Sigarayı bırakmak isteyenler için.",
+      "description": "İşinize yarayabilecek, oluşturduğum bütün siteleri buradan ulaşabilirsiniz.",
       "createdAt": "2026-10-31T07:12:07.368Z"
+    },
+    {
+      "id": "228ae189-7dce-445e-b3d2-bd1ef219336a",
+      "title": "Nick Studio",
+      "url": "https://yusufavcilaar.github.io/nickstudio/",
+      "category": "İşinize Yarayacaklar",
+      "description": "İstediğiniz gibi nick oluşturabilirsiniz.",
+      "createdAt": "2026-11-04T04:02:36.873Z"
     }
   ]
 }
