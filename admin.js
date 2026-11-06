@@ -6,54 +6,45 @@ const CONFIG = {
 };
 
 const TOKEN_KEY = 'gh_pat_session';
-const THEME_KEY = 'theme';
-let currentSha = null, allSites = [], filteredSites = [];
+let currentSha = null, allSites = [];
 
 const $ = (id) => document.getElementById(id);
 const getDomain = (u) => { try { return new URL(u).hostname; } catch { return ''; } };
 
 function showToast(msg, type = '') {
   const c = $('toastContainer');
-  if (!c) return;
   const el = document.createElement('div');
   el.className = `toast ${type}`;
   el.textContent = msg;
   c.appendChild(el);
-  setTimeout(() => {
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 300);
-  }, 3000);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
 }
 
 function initTheme() {
-  if (localStorage.getItem(THEME_KEY) === 'dark') document.body.classList.add('dark');
-  const btn = $('themeToggle');
-  if (btn) {
-    btn.addEventListener('click', () => {
-      document.body.classList.toggle('dark');
-      localStorage.setItem(THEME_KEY, document.body.classList.contains('dark') ? 'dark' : 'light');
-    });
-  }
+  if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+  $('themeToggle').onclick = () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+  };
 }
 
-function confirmModal({ title, message }) {
+// Şık Onay Modalı
+function confirmModal(message) {
   return new Promise((resolve) => {
     const overlay = $('confirmModal');
-    if (!overlay) return resolve(false); // Element yoksa hata verme
-
-    $('confirmTitle').textContent = title || 'Emin misiniz?';
-    $('confirmMessage').textContent = message || 'Bu işlem geri alınamaz.';
+    $('confirmMessage').textContent = message;
     overlay.hidden = false;
     
     const cleanup = (val) => { overlay.hidden = true; resolve(val); };
     
-    const newOkBtn = $('confirmOk').cloneNode(true);
-    const newCancelBtn = $('confirmCancel').cloneNode(true);
-    $('confirmOk').replaceWith(newOkBtn);
-    $('confirmCancel').replaceWith(newCancelBtn);
+    // Eski event listener'ları temizle
+    const newOk = $('confirmOk').cloneNode(true);
+    const newCancel = $('confirmCancel').cloneNode(true);
+    $('confirmOk').replaceWith(newOk);
+    $('confirmCancel').replaceWith(newCancel);
 
-    newOkBtn.onclick = () => cleanup(true);
-    newCancelBtn.onclick = () => cleanup(false);
+    newOk.onclick = () => cleanup(true);
+    newCancel.onclick = () => cleanup(false);
   });
 }
 
@@ -64,7 +55,6 @@ async function ghGet() {
   if (!res.ok) throw new Error('API Hatası: ' + res.status);
   const data = await res.json();
   currentSha = data.sha;
-  // Base64 decode ve UTF-8 çözümü
   return JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
 }
 
@@ -79,12 +69,13 @@ async function ghSave(payload, msg) {
   currentSha = (await res.json()).content.sha;
 }
 
+// Admin Favicon
 function createFavicon(s) {
   const domain = getDomain(s.url);
   if (!domain) return null;
   const img = document.createElement('img');
   img.className = 'favicon';
-  img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+  img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
   img.onerror = () => {
     const f = document.createElement('div');
     f.className = 'favicon-fallback';
@@ -96,17 +87,15 @@ function createFavicon(s) {
 
 function renderSites(sites) {
   const c = $('siteList');
-  if (!c) return;
   c.innerHTML = '';
   if (!sites.length) {
-    c.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted);">Henüz site yok.</div>`;
+    c.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted);">Kayıtlı site yok.</div>`;
     return;
   }
-  
-  sites.forEach((s, i) => {
+
+  sites.forEach(s => {
     const card = document.createElement('div');
     card.className = 'card';
-    card.style.animationDelay = `${i * 40}ms`;
     
     const header = document.createElement('div');
     header.className = 'card-header';
@@ -152,84 +141,64 @@ function renderSites(sites) {
 }
 
 function updateStats() {
-  const statTotal = $('statTotal');
-  const statCategories = $('statCategories');
-  if (statTotal) statTotal.textContent = allSites.length;
-  if (statCategories) statCategories.textContent = new Set(allSites.map(s => s.category).filter(Boolean)).size;
+  $('statTotal').textContent = allSites.length;
+  $('statCategories').textContent = new Set(allSites.map(s => s.category).filter(Boolean)).size;
 }
 
 function applyFilters() {
   let list = allSites.slice();
-  const searchInput = $('adminSearch');
-  const q = searchInput ? searchInput.value.toLowerCase() : '';
-  
+  const q = $('adminSearch').value.toLowerCase();
   if (q) list = list.filter(s => s.title.toLowerCase().includes(q) || s.url.toLowerCase().includes(q));
-  filteredSites = list;
   renderSites(list);
   updateStats();
 }
 
 function resetForm() {
-  const form = $('siteForm');
-  if (form) form.reset();
-  if ($('siteId')) $('siteId').value = '';
-  if ($('submitBtn')) $('submitBtn').textContent = 'Kaydet';
-  if ($('cancelEdit')) $('cancelEdit').style.display = 'none';
-  if ($('formTitle')) $('formTitle').textContent = '➕ Yeni Site Ekle';
-  if ($('descCounter')) $('descCounter').textContent = '0 / 300';
+  $('siteForm').reset();
+  $('siteId').value = '';
+  $('submitBtn').textContent = 'Kaydet';
+  $('cancelEdit').style.display = 'none';
 }
 
 function startEdit(id) {
   const s = allSites.find(x => x.id === id);
   if (!s) return;
-  if ($('siteId')) $('siteId').value = s.id;
-  if ($('title')) $('title').value = s.title;
-  if ($('url')) $('url').value = s.url;
-  if ($('category')) $('category').value = s.category === 'Genel' ? '' : s.category;
-  if ($('description')) $('description').value = s.description;
-  if ($('submitBtn')) $('submitBtn').textContent = 'Güncelle';
-  if ($('cancelEdit')) $('cancelEdit').style.display = 'inline-block';
-  if ($('formTitle')) $('formTitle').textContent = '✏️ Siteyi Düzenle';
-  if ($('descCounter')) $('descCounter').textContent = `${(s.description||'').length} / 300`;
+  $('siteId').value = s.id;
+  $('title').value = s.title;
+  $('url').value = s.url;
+  $('category').value = s.category === 'Genel' ? '' : s.category;
+  $('description').value = s.description;
+  $('submitBtn').textContent = 'Güncelle';
+  $('cancelEdit').style.display = 'inline-block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function removeSite(id) {
   const s = allSites.find(x => x.id === id);
-  if (!s) return showToast('Site bulunamadı', 'error');
+  if (!s) return;
 
-  const siteName = s.title ? `"${s.title}"` : 'Bu site';
-  const ok = await confirmModal({ 
-    title: 'Siteyi Sil', 
-    message: `${siteName} kalıcı olarak silinecek. Emin misiniz?` 
-  });
-  
+  const ok = await confirmModal(`"${s.title}" silinecek. Bu işlem geri alınamaz.`);
   if (!ok) return;
 
   try {
     await ghGet();
     allSites = allSites.filter(x => x.id !== id);
-    await ghSave({ version: 1, updated: new Date().toISOString(), sites: allSites }, `Silindi: ${s.title || 'Bilinmeyen'}`);
+    await ghSave({ version: 1, updated: new Date().toISOString(), sites: allSites }, `Silindi: ${s.title}`);
     applyFilters();
-    showToast('Site başarıyla silindi', 'success');
-  } catch (e) { 
-    showToast(e.message, 'error'); 
-  }
+    showToast('Silindi', 'success');
+  } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function handleSubmit(e) {
   e.preventDefault();
-  const id = $('siteId') ? $('siteId').value : '';
-  const title = $('title') ? $('title').value.trim() : '';
-  const url = $('url') ? $('url').value.trim() : '';
-  const category = $('category') ? ($('category').value.trim() || 'Genel') : 'Genel';
-  const description = $('description') ? $('description').value.trim() : '';
+  const id = $('siteId').value;
+  const title = $('title').value.trim();
+  const url = $('url').value.trim();
+  const category = $('category').value.trim() || 'Genel';
+  const description = $('description').value.trim();
 
-  if(!title || !url) return showToast('Başlık ve URL zorunludur', 'error');
-
-  const btn = $('submitBtn');
   try {
-    if (btn) btn.disabled = true;
+    $('submitBtn').disabled = true;
     await ghGet();
     
     if (id) {
@@ -242,54 +211,40 @@ async function handleSubmit(e) {
     await ghSave({ version: 1, updated: new Date().toISOString(), sites: allSites }, id ? 'Güncellendi' : 'Eklendi');
     applyFilters();
     resetForm();
-    showToast(id ? 'Site güncellendi' : 'Yeni site eklendi', 'success');
+    showToast('Kaydedildi', 'success');
   } catch (err) { 
     showToast(err.message, 'error'); 
-  }
-  finally { 
-    if (btn) btn.disabled = false; 
+  } finally { 
+    $('submitBtn').disabled = false; 
   }
 }
 
 async function login() {
-  const t = $('patInput') ? $('patInput').value.trim() : '';
+  const t = $('patInput').value.trim();
   if (!t) return;
-  
-  const btn = $('loginBtn');
+  sessionStorage.setItem(TOKEN_KEY, t);
   try {
-    if (btn) { btn.disabled = true; btn.textContent = 'Giriş Yapılıyor...'; }
-    sessionStorage.setItem(TOKEN_KEY, t);
     const data = await ghGet();
     allSites = data.sites || [];
-    
-    if ($('loginSection')) $('loginSection').style.display = 'none';
-    if ($('panelSection')) $('panelSection').style.display = 'block';
-    if ($('logoutBtn')) $('logoutBtn').style.display = 'inline-block';
-    
+    $('loginSection').style.display = 'none';
+    $('panelSection').style.display = 'block';
+    $('logoutBtn').style.display = 'inline-block';
     applyFilters();
     showToast('Giriş başarılı', 'success');
   } catch (e) {
     sessionStorage.removeItem(TOKEN_KEY);
-    if ($('loginError')) $('loginError').textContent = 'Geçersiz token! Detay: ' + e.message;
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Giriş Yap'; }
+    $('loginError').textContent = 'Geçersiz token veya repo bulunamadı!';
   }
 }
 
 function init() {
   initTheme();
-  
-  if ($('loginBtn')) $('loginBtn').onclick = login;
-  if ($('siteForm')) $('siteForm').onsubmit = handleSubmit;
-  if ($('cancelEdit')) $('cancelEdit').onclick = resetForm;
-  if ($('adminSearch')) $('adminSearch').oninput = applyFilters;
-  if ($('logoutBtn')) $('logoutBtn').onclick = () => { sessionStorage.removeItem(TOKEN_KEY); location.reload(); };
-  if ($('description')) $('description').oninput = (e) => {
-    if ($('descCounter')) $('descCounter').textContent = `${e.target.value.length} / 300`;
-  };
+  $('loginBtn').onclick = login;
+  $('siteForm').onsubmit = handleSubmit;
+  $('cancelEdit').onclick = resetForm;
+  $('adminSearch').oninput = applyFilters;
+  $('logoutBtn').onclick = () => { sessionStorage.removeItem(TOKEN_KEY); location.reload(); };
   
   if (sessionStorage.getItem(TOKEN_KEY)) login();
 }
-
-// DOM yüklendiğinde çalıştır
-document.addEventListener('DOMContentLoaded', init);
+init();
