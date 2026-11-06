@@ -28,16 +28,15 @@ function initTheme() {
   };
 }
 
-// Şık Onay Modalı
+// Şık ve Modern Silme Modalı
 function confirmModal(message) {
   return new Promise((resolve) => {
     const overlay = $('confirmModal');
     $('confirmMessage').textContent = message;
-    overlay.hidden = false;
+    overlay.classList.add('active');
     
-    const cleanup = (val) => { overlay.hidden = true; resolve(val); };
+    const cleanup = (val) => { overlay.classList.remove('active'); resolve(val); };
     
-    // Eski event listener'ları temizle
     const newOk = $('confirmOk').cloneNode(true);
     const newCancel = $('confirmCancel').cloneNode(true);
     $('confirmOk').replaceWith(newOk);
@@ -52,7 +51,7 @@ async function ghGet() {
   const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.dataPath}?ref=${CONFIG.branch}`, {
     headers: { 'Authorization': `Bearer ${sessionStorage.getItem(TOKEN_KEY)}` }
   });
-  if (!res.ok) throw new Error('API Hatası: ' + res.status);
+  if (!res.ok) throw new Error(res.status === 401 ? 'Token geçersiz' : 'API Hatası');
   const data = await res.json();
   currentSha = data.sha;
   return JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
@@ -69,20 +68,22 @@ async function ghSave(payload, msg) {
   currentSha = (await res.json()).content.sha;
 }
 
-// Admin Favicon
-function createFavicon(s) {
+function createFaviconContainer(s) {
+  const container = document.createElement('div');
+  container.className = 'favicon-container';
+  
   const domain = getDomain(s.url);
-  if (!domain) return null;
+  if (!domain) {
+    container.innerHTML = `<div class="favicon-fallback">${(s.title || '?').charAt(0).toUpperCase()}</div>`;
+    return container;
+  }
   const img = document.createElement('img');
-  img.className = 'favicon';
   img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
   img.onerror = () => {
-    const f = document.createElement('div');
-    f.className = 'favicon-fallback';
-    f.textContent = (s.title || '?').charAt(0).toUpperCase();
-    img.replaceWith(f);
+    container.innerHTML = `<div class="favicon-fallback">${(s.title || '?').charAt(0).toUpperCase()}</div>`;
   };
-  return img;
+  container.appendChild(img);
+  return container;
 }
 
 function renderSites(sites) {
@@ -99,8 +100,7 @@ function renderSites(sites) {
     
     const header = document.createElement('div');
     header.className = 'card-header';
-    const fav = createFavicon(s);
-    if (fav) header.appendChild(fav);
+    header.appendChild(createFaviconContainer(s));
     
     const h3 = document.createElement('h3');
     const a = document.createElement('a');
