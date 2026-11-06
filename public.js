@@ -2,7 +2,6 @@ const DATA_URL = 'sites.json';
 let allSites = [], state = { q: '', cat: '', sort: 'date-desc' };
 
 const $ = (id) => document.getElementById(id);
-const getDomain = (u) => { try { return new URL(u).hostname; } catch { return ''; } };
 
 function initTheme() {
   if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
@@ -12,7 +11,11 @@ function initTheme() {
   };
 }
 
-// 🔥 GÜNCEL FAVICON MANTIĞI: Önce Siteden Çeker, Yoksa Yedeklere Geçer
+// 🔥 ANA SAYFA İÇİN İKON ÇEKME MANTIĞI
+// 1. Sitenin kendi dizinindeki favicon.ico'yu arar (örn: site.com/nickstudio/favicon.ico)
+// 2. Bulamazsa ana dizini arar (örn: site.com/favicon.ico)
+// 3. Bulamazsa Google servisini dener
+// 4. O da olmazsa baş harfi (N, S) gösterir.
 function createFaviconContainer(s) {
   const container = document.createElement('div');
   container.className = 'favicon-container';
@@ -27,16 +30,16 @@ function createFaviconContainer(s) {
     const img = document.createElement('img');
     img.alt = 'icon';
     
-    // 1. ADIM: Sitenin kendi dizinindeki favicon'u dene (örn: nickstudio/favicon.ico)
+    // 1. Aşama: URL'nin kendi klasöründeki favicon
     const path = urlObj.pathname.endsWith('/') ? urlObj.pathname : urlObj.pathname + '/';
     img.src = `${urlObj.origin}${path}favicon.ico`;
     
-    // 2. ADIM: Olmazsa ana dizindeki favicon'u dene (örn: site.com/favicon.ico)
     img.onerror = () => {
+      // 2. Aşama: Domain'in kök dizinindeki favicon
       img.onerror = () => {
-        // 3. ADIM: O da olmazsa Google'ın ikon servisini kullan
+        // 3. Aşama: Google Favicon API
         img.onerror = () => {
-          // 4. ADIM: En son çare olarak Baş Harfi göster
+          // 4. Aşama: Baş harf (Fallback)
           container.innerHTML = `<div class="favicon-fallback">${(s.title || '?').charAt(0).toUpperCase()}</div>`;
         };
         img.src = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
@@ -67,6 +70,8 @@ function renderSites(sites) {
     
     const header = document.createElement('div');
     header.className = 'card-header';
+    
+    // İkonu buraya ekliyoruz
     header.appendChild(createFaviconContainer(s));
     
     const h3 = document.createElement('h3');
