@@ -5,16 +5,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
+<!-- CSP GÜNCELLENDİ: GitHub API'si için izin -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.github.com;">
 <title>Admin – Site Koleksiyonum</title>
-<link rel="stylesheet" href="style.css?v=99">
+<link rel="stylesheet" href="style.css?v=2026">
 </head>
 <body>
 <header>
   <h1>🔒 Yönetim Paneli</h1>
   <div class="header-actions">
     <button id="themeToggle" class="secondary" type="button">🌙</button>
-    <a href="index.html" class="secondary" style="display:inline-flex;align-items:center;padding:0.7rem 1.2rem;border-radius:12px;text-decoration:none;color:inherit;font-weight:600;font-size:0.95rem;">← Site</a>
+    <a href="index.html" class="secondary" style="text-decoration:none; color:inherit; padding:0.75rem 1.5rem; border-radius:var(--radius-md);">← Site</a>
     <button id="logoutBtn" class="danger" type="button" style="display:none;">Çıkış</button>
   </div>
 </header>
@@ -23,17 +24,16 @@
   <!-- Giriş Ekranı -->
   <section id="loginSection" class="login-box">
     <h2>Yönetici Girişi</h2>
-    <p style="margin-bottom:1.5rem;color:var(--text-muted);font-size:0.9rem;">Fine-grained PAT girin. Token sadece bu sekmede tutulur.</p>
+    <p>Devam etmek için GitHub PAT'ınızı girin.</p>
     <input type="password" id="patInput" placeholder="github_pat_..." autocomplete="off">
-    <button id="loginBtn" type="button" style="width:100%;">Giriş Yap</button>
+    <button id="loginBtn" class="primary" type="button" style="width:100%; margin-top:1rem;">Giriş Yap</button>
     <p id="loginError" style="color:var(--danger);margin-top:1rem;font-weight:600;font-size:0.9rem;"></p>
   </section>
 
   <!-- Yönetim Paneli -->
   <section id="panelSection" style="display:none;">
-    <div class="hero-title" style="margin-bottom:1.5rem;">
+    <div class="hero-title" style="margin-bottom:2rem;">
       <h2>İçerik Yönetimi</h2>
-      <p>Siteleri ekleyin, düzenleyin veya silin.</p>
     </div>
 
     <div class="stats-grid">
@@ -47,13 +47,13 @@
       <input type="url" id="url" placeholder="https://example.com" required>
       <input type="text" id="category" placeholder="Kategori (örn. Blog)">
       <textarea id="description" placeholder="Açıklama (opsiyonel)" maxlength="300"></textarea>
-      <div class="actions">
-        <button type="submit" id="submitBtn">Kaydet</button>
+      <div class="form-actions">
+        <button type="submit" id="submitBtn" class="primary">Kaydet</button>
         <button type="button" id="cancelEdit" class="secondary" style="display:none;">İptal</button>
       </div>
     </form>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
       <h3 style="font-size:1.2rem;">📋 Kayıtlı Siteler</h3>
       <input type="search" id="adminSearch" placeholder="Ara..." style="width:250px;border-radius:999px;">
     </div>
@@ -63,11 +63,11 @@
 </main>
 
 <!-- Silme Onay Modalı -->
-<div class="modal-overlay" id="confirmModal" hidden>
+<div class="modal-overlay" id="confirmModal">
   <div class="modal-box">
-    <div style="font-size:2.5rem;margin-bottom:1rem;">🗑️</div>
+    <div style="font-size:3rem;margin-bottom:1rem;">🗑️</div>
     <h3>Emin misiniz?</h3>
-    <p id="confirmMessage"></p>
+    <p id="confirmMessage">Bu site kalıcı olarak silinecek.</p>
     <div class="modal-actions">
       <button class="secondary" id="confirmCancel" type="button">İptal</button>
       <button class="danger" id="confirmOk" type="button">Evet, Sil</button>
@@ -76,6 +76,6 @@
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
-<script src="admin.js?v=99"></script>
+<script src="admin.js?v=2026"></script>
 </body>
 </html>
