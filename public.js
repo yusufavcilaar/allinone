@@ -12,19 +12,26 @@ function initTheme() {
   };
 }
 
-function createFavicon(s) {
+// Gelişmiş Favicon Oluşturucu (Hata olursa Baş Harfi gösterir)
+function createFaviconContainer(s) {
+  const container = document.createElement('div');
+  container.className = 'favicon-container';
+  
   const domain = getDomain(s.url);
-  if (!domain) return null;
+  if (!domain) {
+    container.innerHTML = `<div class="favicon-fallback">${(s.title || '?').charAt(0).toUpperCase()}</div>`;
+    return container;
+  }
+  
   const img = document.createElement('img');
-  img.className = 'favicon';
   img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
+  img.alt = 'icon';
   img.onerror = () => {
-    const f = document.createElement('div');
-    f.className = 'favicon-fallback';
-    f.textContent = (s.title || '?').charAt(0).toUpperCase();
-    img.replaceWith(f);
+    container.innerHTML = `<div class="favicon-fallback">${(s.title || '?').charAt(0).toUpperCase()}</div>`;
   };
-  return img;
+  
+  container.appendChild(img);
+  return container;
 }
 
 function renderSites(sites) {
@@ -35,14 +42,14 @@ function renderSites(sites) {
     return;
   }
 
-  sites.forEach(s => {
+  sites.forEach((s, i) => {
     const card = document.createElement('div');
     card.className = 'card';
+    card.style.animationDelay = `${i * 50}ms`;
     
     const header = document.createElement('div');
     header.className = 'card-header';
-    const fav = createFavicon(s);
-    if (fav) header.appendChild(fav);
+    header.appendChild(createFaviconContainer(s));
     
     const h3 = document.createElement('h3');
     const a = document.createElement('a');
@@ -97,7 +104,8 @@ function renderChips() {
   
   const mk = (label, val) => {
     const btn = document.createElement('button');
-    btn.className = `badge ${state.cat === val ? 'active' : ''}`;
+    btn.className = `badge`;
+    if (state.cat === val) btn.style.background = 'var(--primary)', btn.style.color = 'white';
     btn.textContent = label;
     btn.style.cursor = 'pointer';
     btn.onclick = () => { state.cat = val; renderChips(); applyFilters(); };
@@ -119,7 +127,7 @@ async function init() {
     $('search').oninput = (e) => { state.q = e.target.value; applyFilters(); };
     $('sortBy').onchange = (e) => { state.sort = e.target.value; applyFilters(); };
   } catch (e) {
-    $('siteList').innerHTML = `<div style="text-align:center;padding:2rem;color:red;">Veri yüklenemedi.</div>`;
+    $('siteList').innerHTML = `<div style="text-align:center;padding:2rem;color:var(--danger);">Veri yüklenemedi.</div>`;
   }
 }
 init();
