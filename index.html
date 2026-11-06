@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self';">
 <title>Site Koleksiyonum</title>
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=99">
 </head>
 <body>
 <header>
@@ -17,14 +17,14 @@
 </header>
 
 <main>
-  <section class="admin-hero">
+  <div class="hero-title">
     <h2>İşine Yarayacak Siteler</h2>
     <p>El ile seçilmiş, kategorilere ayrılmış faydalı web siteleri koleksiyonu.</p>
-  </section>
+  </div>
 
   <div class="toolbar">
     <div class="search-wrapper">
-      <input type="search" id="search" placeholder="Başlık, URL, kategori veya açıklama ara...">
+      <input type="search" id="search" placeholder="Başlık, URL veya açıklama ara...">
     </div>
     <select id="sortBy">
       <option value="date-desc">↓ En Yeni</option>
@@ -34,16 +34,12 @@
     </select>
   </div>
 
-  <div class="chips" id="categoryChips" style="display:flex;gap:0.5rem;margin-bottom:1.5rem;overflow-x:auto;padding-bottom:0.5rem;"></div>
-
-  <div class="result-info" style="display:flex;justify-content:space-between;margin-bottom:1.5rem;font-size:0.9rem;color:var(--text-muted);">
-    <span><strong id="resultCount">0</strong> site listeleniyor</span>
-  </div>
+  <div id="categoryChips" style="display:flex;gap:0.5rem;margin-bottom:1.5rem;overflow-x:auto;padding-bottom:0.5rem;"></div>
 
   <section id="siteList" class="grid"></section>
 </main>
 
 <div class="toast-container" id="toastContainer"></div>
-<script src="public.js?v=12"></script>
+<script src="public.js?v=99"></script>
 </body>
 </html>
