@@ -12,25 +12,43 @@ function initTheme() {
   };
 }
 
-// Gelişmiş Favicon Oluşturucu (Hata olursa Baş Harfi gösterir)
+// 🔥 GÜNCEL FAVICON MANTIĞI: Önce Siteden Çeker, Yoksa Yedeklere Geçer
 function createFaviconContainer(s) {
   const container = document.createElement('div');
   container.className = 'favicon-container';
   
-  const domain = getDomain(s.url);
-  if (!domain) {
+  if (!s.url) {
     container.innerHTML = `<div class="favicon-fallback">${(s.title || '?').charAt(0).toUpperCase()}</div>`;
     return container;
   }
-  
-  const img = document.createElement('img');
-  img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
-  img.alt = 'icon';
-  img.onerror = () => {
+
+  try {
+    const urlObj = new URL(s.url);
+    const img = document.createElement('img');
+    img.alt = 'icon';
+    
+    // 1. ADIM: Sitenin kendi dizinindeki favicon'u dene (örn: nickstudio/favicon.ico)
+    const path = urlObj.pathname.endsWith('/') ? urlObj.pathname : urlObj.pathname + '/';
+    img.src = `${urlObj.origin}${path}favicon.ico`;
+    
+    // 2. ADIM: Olmazsa ana dizindeki favicon'u dene (örn: site.com/favicon.ico)
+    img.onerror = () => {
+      img.onerror = () => {
+        // 3. ADIM: O da olmazsa Google'ın ikon servisini kullan
+        img.onerror = () => {
+          // 4. ADIM: En son çare olarak Baş Harfi göster
+          container.innerHTML = `<div class="favicon-fallback">${(s.title || '?').charAt(0).toUpperCase()}</div>`;
+        };
+        img.src = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
+      };
+      img.src = `${urlObj.origin}/favicon.ico`;
+    };
+    
+    container.appendChild(img);
+  } catch(e) {
     container.innerHTML = `<div class="favicon-fallback">${(s.title || '?').charAt(0).toUpperCase()}</div>`;
-  };
+  }
   
-  container.appendChild(img);
   return container;
 }
 
